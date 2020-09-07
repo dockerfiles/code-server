@@ -84,7 +84,7 @@ ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64
 # Code-Server
 
 RUN apt-get update && apt-get install --no-install-recommends -y \
-    bsdtar \
+    libarchive-tools \
     openssl \
     locales \
     net-tools \
@@ -130,17 +130,27 @@ COPY --chown=coder:coder settings.json /home/coder/.local/share/code-server/User
 #    && curl -JLs https://marketplace.visualstudio.com/_apis/public/gallery/publishers/ms-python/vsextensions/python/latest/vspackage | bsdtar --strip-components=1 -xf - -C ${VSCODE_EXTENSIONS}/python extension
 
 # Setup Java Extension
-RUN mkdir -p ${VSCODE_EXTENSIONS}/java \
-    && curl -JLs https://marketplace.visualstudio.com/_apis/public/gallery/publishers/redhat/vsextensions/java/latest/vspackage | bsdtar --strip-components=1 -xf - -C ${VSCODE_EXTENSIONS}/java extension
 
-RUN mkdir -p ${VSCODE_EXTENSIONS}/java-debugger \
-    && curl -JLs https://marketplace.visualstudio.com/_apis/public/gallery/publishers/vscjava/vsextensions/vscode-java-debug/latest/vspackage | bsdtar --strip-components=1 -xf - -C ${VSCODE_EXTENSIONS}/java-debugger extension
+RUN code-server --force --install-extension vscjava.vscode-java-debug
+RUN code-server --force --install-extension vscjava.vscode-maven
+RUN code-server --force --install-extension vscjava.vscode-java-pack
+# RUN mkdir -p ${VSCODE_EXTENSIONS}/java \
+#     && curl -JLs https://marketplace.visualstudio.com/_apis/public/gallery/publishers/redhat/vsextensions/java/latest/vspackage | bsdtar --strip-components=1 -xf - -C ${VSCODE_EXTENSIONS}/java extension
 
-RUN mkdir -p ${VSCODE_EXTENSIONS}/java-test \
-    && curl -JLs https://marketplace.visualstudio.com/_apis/public/gallery/publishers/vscjava/vsextensions/vscode-java-test/latest/vspackage | bsdtar --strip-components=1 -xf - -C ${VSCODE_EXTENSIONS}/java-test extension
+# RUN mkdir -p ${VSCODE_EXTENSIONS}/java-debugger \
+#     && curl -JLs https://marketplace.visualstudio.com/_apis/public/gallery/publishers/vscjava/vsextensions/vscode-java-debug/latest/vspackage | bsdtar --strip-components=1 -xf - -C ${VSCODE_EXTENSIONS}/java-debugger extension
 
-RUN mkdir -p ${VSCODE_EXTENSIONS}/maven \
-    && curl -JLs https://marketplace.visualstudio.com/_apis/public/gallery/publishers/vscjava/vsextensions/vscode-maven/latest/vspackage | bsdtar --strip-components=1 -xf - -C ${VSCODE_EXTENSIONS}/maven extension
+# RUN mkdir -p ${VSCODE_EXTENSIONS}/java-dependency \
+#     && curl -JLs https://marketplace.visualstudio.com/_apis/public/gallery/publishers/vscjava/vsextensions/vscode-java-dependency/latest/vspackage | bsdtar --strip-components=1 -xf - -C ${VSCODE_EXTENSIONS}/java-dependency extension
+
+# RUN mkdir -p ${VSCODE_EXTENSIONS}/java-pack \
+#     && curl -JLs https://marketplace.visualstudio.com/_apis/public/gallery/publishers/vscjava/vsextensions/vscode-java-pack/latest/vspackage | bsdtar --strip-components=1 -xf - -C ${VSCODE_EXTENSIONS}/java-pack extension
+
+# RUN mkdir -p ${VSCODE_EXTENSIONS}/java-test \
+#     && curl -JLs https://marketplace.visualstudio.com/_apis/public/gallery/publishers/vscjava/vsextensions/vscode-java-test/latest/vspackage | bsdtar --strip-components=1 -xf - -C ${VSCODE_EXTENSIONS}/java-test extension
+
+# RUN mkdir -p ${VSCODE_EXTENSIONS}/maven \
+#     && curl -JLs https://marketplace.visualstudio.com/_apis/public/gallery/publishers/vscjava/vsextensions/vscode-maven/latest/vspackage | bsdtar --strip-components=1 -xf - -C ${VSCODE_EXTENSIONS}/maven extension
 
 # Setup Kubernetes Extension
 #RUN mkdir -p ${VSCODE_EXTENSIONS}/yaml \
@@ -174,6 +184,11 @@ WORKDIR /home/coder/project
 EXPOSE 8080
 
 ENV PASSWORD=password
+
+RUN \
+  mkdir -p /home/coder/.m2/
+
+COPY settings.xml /home/coder/.m2/settings.xml
 
 ENTRYPOINT ["dumb-init", "--"]
 CMD ["code-server","--host","0.0.0.0"]
